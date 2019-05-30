@@ -15,4 +15,4 @@ const { Signature } = require('@agora-lab/tools')
 ...
 ```
 
-You can see AppRequest.test.js
+You can see tests/
