@@ -1,12 +1,12 @@
-const assert = require('assert')
-const Signature = require('../Signature')
+import * as assert from 'assert'
+import { Signature } from '../../src'
 
 describe('Test MySignature', () => {
   it(`Normal Test`, async () => {
     const secret = '123456'
     const signature = new Signature(secret, 600)
     const expires = signature.getExpires()
-    const queryParams = {
+    const queryParams: any = {
       x: 123,
       y: 456,
       _expires: expires,

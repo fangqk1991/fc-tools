@@ -1,12 +1,15 @@
-const crypto = require('crypto')
+import * as crypto from 'crypto'
 
-class Signature {
-  constructor(secret, expiration = 600) {
+export class Signature {
+  private readonly _secret: string
+  private readonly _expiration: number
+
+  public constructor(secret: string, expiration = 600) {
     this._secret = secret
     this._expiration = expiration
   }
 
-  encodeBody(data) {
+  public encodeBody(data: any): string {
     if (data === null) {
       return 'null'
     }
@@ -17,25 +20,19 @@ class Signature {
       return `${data}`
     }
     if (Array.isArray(data)) {
-      const content = data.map(item => this.encodeBody(item)).join(',')
+      const content = data.map((item: any) => this.encodeBody(item)).join(',')
       return `[${content}]`
     }
     const keys = Object.keys(data)
     keys.sort()
-    const content = keys.map(key => `"${key}":${this.encodeBody(data[key])}`).join(',')
+    const content = keys.map((key: string) => `"${key}":${this.encodeBody(data[key])}`).join(',')
     return `{${content}}`
   }
 
-  /**
-   * @param method {string}
-   * @param apiPath {string}
-   * @param queryParams {Object}
-   * @param body {Object}
-   * @returns {string}
-   */
-  sign(method, apiPath, queryParams, body = '') {
+  public sign(method: string, apiPath: string, queryParams: any, body: any = '') {
     method = method.toUpperCase()
 
+    // @ts-ignore
     queryParams = Object.assign({}, queryParams)
     delete queryParams['_token']
     const sortedKeys = Object.keys(queryParams).sort()
@@ -51,21 +48,11 @@ class Signature {
     return crypto.createHash('md5').update(items.join(',')).digest('hex')
   }
 
-  /**
-   * @returns {Number}
-   */
-  getExpires() {
+  public getExpires() {
     return Math.floor((+new Date()) / 1000) + this._expiration
   }
 
-  /**
-   * @param method {string}
-   * @param apiPath {string}
-   * @param queryParams {Object}
-   * @param body {Object}
-   * @returns {boolean}
-   */
-  checkSign(method, apiPath, queryParams, body = '') {
+  public checkSign(method: string, apiPath: string, queryParams: any, body: any = '') {
     const token = queryParams['_token']
     const token2 = this.sign(method, apiPath, queryParams, body)
     if (typeof body === 'object' && Object.keys(body).length > 0) {
@@ -75,14 +62,8 @@ class Signature {
     return token === token2 || token === token3
   }
 
-  /**
-   * @param queryParams {Object}
-   * @returns {boolean}
-   */
-  checkExpires(queryParams) {
+  public checkExpires(queryParams: any) {
     const expires = queryParams['_expires']
     return expires >= Math.floor((+new Date()) / 1000)
   }
 }
-
-module.exports = Signature
