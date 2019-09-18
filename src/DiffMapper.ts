@@ -6,6 +6,7 @@ export enum DiffType {
 }
 
 export interface DiffEntity {
+  keychain: string[]
   type: DiffType
   from: any
   to: any
@@ -47,6 +48,10 @@ const compareValues = function(value1: any, value2: any) {
   return DiffType.Updated
 }
 
+const checkLeafNode = (node: any) => {
+  return isObject(node) && Object.keys(node).length === 3 && 'type' in node && 'from' in node && 'to' in node
+}
+
 export class DiffMapper {
   private readonly fromObj: {}
   private readonly toObj: {}
@@ -65,7 +70,7 @@ export class DiffMapper {
         type: compareValues(obj1, obj2),
         from: obj1,
         to: obj2,
-      } as DiffEntity
+      }
     }
 
     let diff: any = {};
@@ -93,10 +98,10 @@ export class DiffMapper {
   }
 
   public buildDiffMap() {
-    const result = this.buildFullResult()
+    const result = this.buildCompareMap()
 
     const trimNodes = (node: any) => {
-      if (Object.keys(node).length === 3 && 'type' in node && 'from' in node && 'to' in node) {
+      if (checkLeafNode(node)) {
         return node['type'] !== DiffType.Unchanged
       }
       for (const key in node) {
@@ -111,15 +116,54 @@ export class DiffMapper {
     return result
   }
 
-  public buildFullResult() {
+  public buildCompareMap() {
     return this._compare(this.fromObj, this.toObj)
   }
 
+  public buildCompareItems() {
+    const data = this.buildCompareMap()
+
+    const leaves: DiffEntity[] = []
+    let curItems: { keychain: string[]; node: any }[] = [{
+      keychain: [],
+      node: data,
+    }]
+    while (curItems.length > 0) {
+      const newItems: any[] = []
+      curItems.forEach((item) => {
+        const node = item.node
+        if (checkLeafNode(node)) {
+          leaves.push({
+            keychain: item.keychain,
+            type: node.type,
+            from: node.from,
+            to: node.to,
+          })
+          return
+        }
+
+        Object.keys(node).forEach((key) => {
+          newItems.push({
+            keychain: [...item.keychain, key],
+            node: node[key],
+          })
+        })
+      })
+      curItems = newItems
+    }
+
+    return leaves
+  }
+
+  public buildDiffItems() {
+    return this.buildCompareItems().filter((item) => item.type !== DiffType.Unchanged)
+  }
+
   public static compare(fromObj: {}, toObj: {}) {
-    return new this(fromObj, toObj).buildFullResult()
+    return new this(fromObj, toObj).buildCompareItems()
   }
 
   public static diff(fromObj: {}, toObj: {}) {
-    return new this(fromObj, toObj).buildDiffMap()
+    return new this(fromObj, toObj).buildDiffItems()
   }
 }

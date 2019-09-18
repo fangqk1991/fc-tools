@@ -7,7 +7,7 @@ describe('Test DiffMapper', () => {
       unchangedStr: '123',
       unchangedNumber: 123,
       changedStr: '123',
-      oldObj: 123,
+      oldNumber: 123,
       unchangedObj: {
         a: 1,
       },
@@ -22,7 +22,7 @@ describe('Test DiffMapper', () => {
       unchangedStr: '123',
       unchangedNumber: 123,
       changedStr: '456',
-      newObj: 123,
+      newNumber: 123,
       unchangedObj: {
         a: 1,
       },
@@ -30,13 +30,18 @@ describe('Test DiffMapper', () => {
         a: 2,
         c: 3,
         d: {},
+        e: {
+          ee: {
+            eee: 1
+          }
+        }
       },
       arr: [1, 1, 2, 3],
     }
 
     {
-      const result = DiffMapper.compare(fromObj, toObj)
-      console.log(result)
+      const mapper = new DiffMapper(fromObj, toObj)
+      const result = mapper.buildCompareMap()
       assert.ok(result['unchangedStr'])
       assert.ok(result['unchangedStr']['type'] === DiffType.Unchanged)
       assert.ok(result['unchangedNumber'])
@@ -45,15 +50,15 @@ describe('Test DiffMapper', () => {
       assert.ok(result['changedStr']['type'] === DiffType.Updated)
       assert.ok(result['changedObj'])
       assert.ok(result['unchangedObj'])
-      assert.ok(result['oldObj'])
-      assert.ok(result['oldObj']['type'] === DiffType.Deleted)
-      assert.ok(result['newObj'])
-      assert.ok(result['newObj']['type'] === DiffType.Created)
+      assert.ok(result['oldNumber'])
+      assert.ok(result['oldNumber']['type'] === DiffType.Deleted)
+      assert.ok(result['newNumber'])
+      assert.ok(result['newNumber']['type'] === DiffType.Created)
     }
 
     {
-      const result = DiffMapper.diff(fromObj, toObj)
-      console.log(result)
+      const mapper = new DiffMapper(fromObj, toObj)
+      const result = mapper.buildDiffMap()
       assert.ok(!result['unchangedStr'])
       assert.ok(!result['unchangedNumber'])
       assert.ok(!result['unchangedNumber'])
@@ -61,10 +66,40 @@ describe('Test DiffMapper', () => {
       assert.ok(result['changedStr']['type'] === DiffType.Updated)
       assert.ok(result['changedObj'])
       assert.ok(!result['unchangedObj'])
-      assert.ok(result['oldObj'])
-      assert.ok(result['oldObj']['type'] === DiffType.Deleted)
-      assert.ok(result['newObj'])
-      assert.ok(result['newObj']['type'] === DiffType.Created)
+      assert.ok(result['oldNumber'])
+      assert.ok(result['oldNumber']['type'] === DiffType.Deleted)
+      assert.ok(result['newNumber'])
+      assert.ok(result['newNumber']['type'] === DiffType.Created)
+    }
+
+    {
+      const mapper = new DiffMapper(fromObj, toObj)
+      const compareItems = mapper.buildCompareItems()
+      compareItems.forEach((item) => {
+        let fromItem: any = fromObj
+        let toItem: any = toObj
+        item.keychain.forEach((key) => {
+          fromItem = fromItem[key]
+          toItem = toItem[key]
+        })
+
+        if (item.type === DiffType.Unchanged) {
+          assert.equal(fromItem, toItem)
+        } else {
+          assert.notEqual(fromItem, toItem)
+        }
+
+        assert.equal(item.from, fromItem)
+        assert.equal(item.to, toItem)
+      })
+    }
+
+    {
+      const mapper = new DiffMapper(fromObj, toObj)
+      const diffItems = mapper.buildDiffItems()
+      diffItems.forEach((item) => {
+        assert.notEqual(item.type, DiffType.Unchanged)
+      })
     }
   })
 })
