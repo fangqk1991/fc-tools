@@ -159,11 +159,19 @@ export class DiffMapper {
     return this.buildCompareItems().filter((item) => item.type !== DiffType.Unchanged)
   }
 
+  public checkNoChanges() {
+    return this.buildDiffItems().length === 0
+  }
+
   public static compare(fromObj: {}, toObj: {}) {
     return new this(fromObj, toObj).buildCompareItems()
   }
 
   public static diff(fromObj: {}, toObj: {}) {
     return new this(fromObj, toObj).buildDiffItems()
+  }
+
+  public static checkEquals(fromObj: {}, toObj: {}) {
+    return new this(fromObj, toObj).checkNoChanges()
   }
 }
