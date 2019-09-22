@@ -174,6 +174,9 @@ export class DiffMapper {
         const nextItems = []
         for (const curKeychain of curItems) {
           let targetData = endItem(getObjectChainForData(targetMap, curKeychain))
+          if (!targetData) {
+            break
+          }
           const keys = isRegex(curKey) ? Object.keys(targetData) : [curKey]
           for (const key of keys) {
             if (!checkLeafNode(targetData[key])) {

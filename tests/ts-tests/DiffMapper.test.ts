@@ -169,6 +169,8 @@ describe('Test DiffMapper', () => {
       mapper.addSpecialKeychain(['keyObject6', 'noExists'])
       mapper.addSpecialKeychain(['noExists'])
       mapper.addSpecialKeychain(['keyObject8', /^.*$/])
+      mapper.addSpecialKeychain(['nothing1', '123'])
+      mapper.addSpecialKeychain(['nothing2', /^.*$/])
       const result = mapper.buildCompareMap()
       assert.ok(result['keyObject6'])
       assert.ok(result['keyObject6']['type'] === DiffType.Updated)
