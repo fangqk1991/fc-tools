@@ -63,9 +63,18 @@ describe('Test MySignature', () => {
       xxx: 1,
       abc: 'abc',
     }
-    const signedUrl = signature.generateSignedUrl(method, prevUrl, queryParams, body)
-    const urlObj = urlHelper.parse(signedUrl, true)
-    assert.ok(signature.checkExpires(urlObj.query))
-    assert.ok(signature.checkSign(method, urlObj.pathname as string, urlObj.query, body))
+    {
+      const signedUrl = signature.generateSignedUrl(method, prevUrl, queryParams, body)
+      const urlObj = urlHelper.parse(signedUrl, true)
+      assert.ok(signature.checkExpires(urlObj.query))
+      assert.ok(signature.checkSign(method, urlObj.pathname as string, urlObj.query, body))
+    }
+    {
+      const bodyContent = JSON.stringify(body)
+      const signedUrl = signature.generateSignedUrl(method, prevUrl, queryParams, bodyContent)
+      const urlObj = urlHelper.parse(signedUrl, true)
+      assert.ok(signature.checkExpires(urlObj.query))
+      assert.ok(signature.checkSign(method, urlObj.pathname as string, urlObj.query, bodyContent))
+    }
   })
 })
