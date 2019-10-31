@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+import * as urlHelper from 'url'
 
 export class Signature {
   private readonly _secret: string
@@ -48,6 +49,18 @@ export class Signature {
     return crypto.createHash('md5').update(items.join(',')).digest('hex')
   }
 
+  public generateSignedUrl(method: string, url: string, extrasQueryParams: {} = {}, body: any = '') {
+    extrasQueryParams = Object.assign({}, extrasQueryParams, {
+      _expires: this.getExpires(),
+    })
+    const tmpUrl = injectUrlQueryParams(url, extrasQueryParams)
+    const urlObj = urlHelper.parse(tmpUrl, true)
+    const token = this.sign(method, urlObj.pathname as string, urlObj.query, body)
+    return injectUrlQueryParams(urlHelper.format(urlObj), {
+      _token: token,
+    })
+  }
+
   public getExpires() {
     return Math.floor((+new Date()) / 1000) + this._expiration
   }
@@ -66,4 +79,15 @@ export class Signature {
     const expires = queryParams['_expires']
     return expires >= Math.floor((+new Date()) / 1000)
   }
+}
+
+export function injectUrlQueryParams(urlStr: string, queryParams: {} = {}) {
+  if (Object.keys(queryParams).length === 0) {
+    return urlStr
+  }
+
+  const urlObj = urlHelper.parse(urlStr, true)
+  urlObj.query = Object.assign({}, urlObj.query || {}, queryParams)
+  urlObj.search = undefined
+  return urlHelper.format(urlObj)
 }
