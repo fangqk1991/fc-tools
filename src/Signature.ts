@@ -8,7 +8,7 @@ export function injectUrlQueryParams(urlStr: string, queryParams: {} = {}) {
 
   const urlObj = urlHelper.parse(urlStr, true)
   urlObj.query = Object.assign({}, urlObj.query || {}, queryParams)
-  urlObj.search = undefined
+  delete urlObj.search
   return urlHelper.format(urlObj)
 }
 
@@ -41,15 +41,22 @@ export class Signature {
     return `{${content}}`
   }
 
-  public sign(method: string, apiPath: string, queryParams: { [p: string]: number | string } = {}, body: {} | string = '') {
+  public sign(
+    method: string,
+    apiPath: string,
+    queryParams: { [p: string]: number | string } = {},
+    body: {} | string = ''
+  ) {
     method = method.toUpperCase()
 
     queryParams = Object.assign({}, queryParams)
     delete queryParams['_token']
     const sortedKeys = Object.keys(queryParams).sort()
-    const query = sortedKeys.map(key => {
-      return `${key}=${queryParams[key]}`
-    }).join('&')
+    const query = sortedKeys
+      .map((key) => {
+        return `${key}=${queryParams[key]}`
+      })
+      .join('&')
 
     if (body === null || body === undefined) {
       body = ''
@@ -63,13 +70,22 @@ export class Signature {
     }
     const items = []
     items.push(method)
+    items.push(apiPath)
     items.push(query)
     items.push(bodyContent)
     items.push(this._secret)
-    return crypto.createHash('md5').update(items.join(',')).digest('hex')
+    return crypto
+      .createHash('md5')
+      .update(items.join(','))
+      .digest('hex')
   }
 
-  public generateSignedUrl(method: string, url: string, extrasQueryParams: { [p: string]: number | string } = {}, body: {} | string = '') {
+  public generateSignedUrl(
+    method: string,
+    url: string,
+    extrasQueryParams: { [p: string]: number | string } = {},
+    body: {} | string = ''
+  ) {
     extrasQueryParams = Object.assign({}, extrasQueryParams, {
       _expires: this.getExpires(),
     })
@@ -82,7 +98,7 @@ export class Signature {
   }
 
   public getExpires() {
-    return Math.floor((+new Date()) / 1000) + this._expiration
+    return Math.floor(+new Date() / 1000) + this._expiration
   }
 
   public checkSign(method: string, apiPath: string, queryParams: any, body: any = '') {
@@ -97,6 +113,6 @@ export class Signature {
 
   public checkExpires(queryParams: any) {
     const expires = queryParams['_expires']
-    return expires >= Math.floor((+new Date()) / 1000)
+    return expires >= Math.floor(+new Date() / 1000)
   }
 }
