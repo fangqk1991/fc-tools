@@ -1,6 +1,6 @@
 {
   "name": "@agora-lab/tools",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Some tools.",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -37,7 +37,8 @@
     "typescript": "^3.6.4"
   },
   "files": [
-    "lib/*"
+    "lib/*",
+    "src/*"
   ],
   "nyc": {
     "sourceMap": false
